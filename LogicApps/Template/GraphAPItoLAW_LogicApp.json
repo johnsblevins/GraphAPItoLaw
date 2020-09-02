@@ -1,0 +1,226 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"logicAppName": {
+			"type": "string",
+			"metadata": {
+				"description": "The name of the logic app to create."
+			}
+		},
+		"graphAPICall": {
+			"type": "string",
+			"defaultValue": "",
+            "allowedValues": [
+                "https://graph.microsoft.com/v1.0/auditLogs/directoryAudits",
+                "https://graph.microsoft.com/v1.0/auditLogs/signIns",
+                "https://graph.microsoft.com/v1.0/reports/getEmailActivityCounts(period='D7')",
+                "https://graph.microsoft.com/v1.0/reports/getEmailActivityUserCounts(period='D7')",
+                "https://graph.microsoft.com/v1.0/reports/getOffice365ActiveUserCounts(period='D7')",
+                "https://graph.microsoft.com/v1.0/reports/getOffice365ActiveUserDetail(period='D7')",
+                "https://graph.microsoft.com/v1.0/reports/getOffice365ServicesUserCounts(period='D7')",
+                "https://graph.microsoft.com/v1.0/reports/getOneDriveActivityFileCounts(period='D7')",
+                "https://graph.microsoft.com/v1.0/reports/getOneDriveActivityUserCounts(period='D7')",
+                "https://graph.microsoft.com/v1.0/reports/getOneDriveActivityUserDetail(period='D7')",
+                "https://graph.microsoft.com/v1.0/reports/getSharePointActivityFileCounts(period='D7')",
+                "https://graph.microsoft.com/v1.0/reports/getSharePointActivityPages(period='D7')",
+                "https://graph.microsoft.com/v1.0/reports/getSharePointActivityUserCounts(period='D7')",
+                "https://graph.microsoft.com/v1.0/reports/getSharePointActivityUserDetail(period='D7')",
+                "https://graph.microsoft.com/v1.0/reports/getTeamsUserActivityCounts(period='D7')",
+                "https://graph.microsoft.com/v1.0/reports/getTeamsUserActivityUserCounts(period='D7')",
+                "https://graph.microsoft.com/v1.0/reports/getTeamsUserActivityUserDetail(period='D7')"
+            ],
+			"metadata": {
+				"description": "Graph API Call"
+			}
+		},
+		"location": {
+			"type": "string",
+			"defaultValue": "[resourceGroup().location]",
+			"metadata": {
+				"description": "Location for all resources."
+			}
+		},
+        "subscriptionId": {
+			"type": "string",
+			"defaultValue": "828ccdf7-38da-4aa4-b635-47ef8aec278e",
+			"metadata": {
+				"description": "Subscription ID"
+			}
+		},
+        "FunctionAppResourceGroup": {
+			"type": "string",
+			"defaultValue": "iadbcsvtojson",
+			"metadata": {
+				"description": "Subscription ID"
+			}
+		},
+        "FunctionAppName": {
+			"type": "string",
+			"defaultValue": "iadbcsvtojson",
+			"metadata": {
+				"description": "Function App Name"
+			}
+		},
+        "FunctionName": {
+			"type": "string",
+			"defaultValue": "CSVToJSON",
+			"metadata": {
+				"description": "Function Name"
+			}
+		},
+        "audience": {
+			"type": "string",
+			"defaultValue": "https://graph.microsoft.com",
+			"metadata": {
+				"description": "Function Name"
+			}
+		},
+        "authority": {
+			"type": "string",
+			"defaultValue": "https://login.windows.net",
+			"metadata": {
+				"description": "Function Name"
+            }
+        },
+        "clientId": {
+			"type": "string",
+			"defaultValue": "6fa120ce-a0a4-482f-8145-3b62d50f31e1",
+			"metadata": {
+				"description": "Function Name"
+            }            
+        },
+        "secret": {
+			"type": "string",
+			"defaultValue": "F..wg5BrNHEPUQ-~q47ejk1T4.d.-h6PJ0",
+			"metadata": {
+				"description": "Function Name"
+            }
+        },
+        "tenant": {
+			"type": "string",
+			"defaultValue": "5853652e-b1c3-4938-9659-738d1fb447c4",
+			"metadata": {
+				"description": "Function Name"
+            }
+        }
+	},
+	"variables": {},
+	"resources": [{
+		"type": "Microsoft.Logic/workflows",
+		"apiVersion": "2019-05-01",
+		"name": "[parameters('logicAppName')]",
+		"location": "[parameters('location')]",
+		"tags": {
+			"displayName": "LogicApp"
+		},
+		"properties": {
+			"definition": {
+                "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                "actions": {
+                    "CSVToJSON": {
+                        "inputs": {
+                            "body": {
+                                "csv": "@{triggerBody()}",
+                                "fileName": "",
+                                "rowsToSkip": 1
+                            },
+                            "function": {
+                                "id": "[concat('/subscriptions/',parameters('subscriptionId'),'/resourceGroups/',parameters('FunctionAppResourceGroup'),'/providers/Microsoft.Web/sites/',parameters('FunctionAppName'),'/functions/',parameters('FunctionName'))]"
+                            }
+                        },
+                        "runAfter": {},
+                        "type": "Function"
+                    },
+                    "Parse_JSON": {
+                        "inputs": {
+                            "content": "@body('CSVToJSON')",
+                            "schema": {
+                                "properties": {
+                                    "csv": {
+                                        "type": "string"
+                                    },
+                                    "fileName": {
+                                        "type": "string"
+                                    },
+                                    "rowsToSkip": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "runAfter": {
+                            "CSVToJSON": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "ParseJson"
+                    },
+                    "Send_Data": {
+                        "inputs": {
+                            "body": "@{body('Parse_JSON')?['rows']}",
+                            "headers": {
+                                "Log-Type": "TeamsUserActivityUserCounts"
+                            },
+                            "host": {
+                                "connection": {
+                                    "name": "@parameters('$connections')['azureloganalyticsdatacollector']['connectionId']"
+                                }
+                            },
+                            "method": "post",
+                            "path": "/api/logs"
+                        },
+                        "runAfter": {
+                            "Parse_JSON": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "ApiConnection"
+                    }
+                },
+                "contentVersion": "1.0.0.0",
+                "outputs": {},
+                "parameters": {
+                    "$connections": {
+                        "defaultValue": {},
+                        "type": "Object"
+                    }
+                },
+                "triggers": {
+                    "HTTP": {
+                        "inputs": {
+                            "authentication": {
+                                "audience": "[parameters('audience')]",
+                                "authority": "[parameters('authority')]",
+                                "clientId": "[parameters('clientId')]",
+                                "secret": "[parameters('secret')]",
+                                "tenant": "[parameters('tenant')]",
+                                "type": "ActiveDirectoryOAuth"
+                            },
+                            "method": "GET",
+                            "uri": "[parameters('graphAPICall')]"
+                        },
+                        "recurrence": {
+                            "frequency": "Day",
+                            "interval": 7
+                        },
+                        "type": "Http"
+                    }
+                }
+            },
+            "parameters": {
+                "$connections": {
+                    "value": {
+                        "azureloganalyticsdatacollector": {
+                            "connectionId": "/subscriptions/828ccdf7-38da-4aa4-b635-47ef8aec278e/resourceGroups/joblevin-graph2law/providers/Microsoft.Web/connections/azureloganalyticsdatacollector",
+                            "connectionName": "azureloganalyticsdatacollector",
+                            "id": "/subscriptions/828ccdf7-38da-4aa4-b635-47ef8aec278e/providers/Microsoft.Web/locations/usgovvirginia/managedApis/azureloganalyticsdatacollector"
+                        }
+                    }
+                }
+            }
+		}
+	}],
+	"outputs": {}
+}
