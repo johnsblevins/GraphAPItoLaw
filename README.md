@@ -8,7 +8,7 @@ It is recommended that the CSVtoJSON Function App be deployed to Azure using Vis
 * Azure Account
 * C#
 
-In addition the .NET Core 3.1 SDK is required to compile the Function App code. This can be be downloaded from https://dotnet.microsoft.com/download/dotnet-core/3.1.
+In addition the .NET Core 3.1 SDK is required to compile the Function App code. This can be be downloaded from https://dotnet.microsoft.com/download/dotnet-core/3.1.  GIT is also required and can be downloaded from https://git-scm.com/download/win.
 
 ## Compile and Deploy Function App
 1. Clone this repo to your local machine using VSCode
