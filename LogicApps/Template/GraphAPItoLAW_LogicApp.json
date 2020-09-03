@@ -103,14 +103,37 @@
 			"metadata": {
 				"description": "Function Name"
             }
-        }
+        },
+        "LAWConnectorName": {
+			"type": "string",
+			"defaultValue": "myLawConnector",
+			"metadata": {
+				"description": "Log Analytics Workspace ID."
+			}
+		},
+        "LAWWorkspaceId": {
+			"type": "string",
+			"defaultValue": "10e9eb79-a0af-4487-9e91-074ef479fed2",
+			"metadata": {
+				"description": "Log Analytics Workspace ID."
+			}
+		},
+        "LAWWorkspaceKey": {
+			"type": "string",
+			"defaultValue": "YmrSqX8W0PJCwXf7ISbLG5bGd0jTOmXEB2cSGekIPtqsSAADYdk7VaUkoWKOZeVcqkeTv4ofP8kCeQd2q9M0Tg==",
+			"metadata": {
+				"description": "Log Analytics Workspace Key."
+			}
+		}
 	},
 	"variables": {},
-	"resources": [{
+	"resources": [
+        {
 		"type": "Microsoft.Logic/workflows",
 		"apiVersion": "2019-05-01",
 		"name": "[parameters('logicAppName')]",
 		"location": "[parameters('location')]",
+        "dependsOn": ["[parameters('LAWConnectorname')]"],
 		"tags": {
 			"displayName": "LogicApp"
 		},
@@ -221,6 +244,25 @@
                 }
             }
 		}
-	}],
+	    },
+        {
+            "type": "Microsoft.Web/connections",
+            "apiVersion": "2018-07-01-preview",
+            "location": "[parameters('location')]",
+            "name": "[parameters('LAWConnectorname')]",
+            "dependsOn": [],
+            "properties": {
+                "displayName": "[parameters('LAWConnectorname')]",
+                "customParameterValues": {},
+                "api": {
+                    "id": "[concat('/subscriptions/',parameters('subscriptionId'),'/providers/Microsoft.Web/locations/usgovvirginia/managedApis/azureloganalyticsdatacollector')]"
+                },
+                "parameterValues": {
+                    "username": "[parameters('LAWWorkspaceId')]",
+                    "password": "[parameters('LAWWorkspaceKey')]"
+                }
+            }
+        }
+    ],
 	"outputs": {}
 }

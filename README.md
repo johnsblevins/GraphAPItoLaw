@@ -7,14 +7,30 @@ It is recommended that the CSVtoJSON Function App be deployed to Azure using Vis
 * Azure Functions
 * Azure Account
 * C#
+* .NET Install Tool for Extension Authors
 
-In addition the .NET Core 3.1 SDK is required to compile the Function App code. This can be be downloaded from https://dotnet.microsoft.com/download/dotnet-core/3.1.
+In addition the following Packages/Tools are Required:
+* .NET Core 3.1 SDK is required to compile the Function App code. This can be be downloaded from https://dotnet.microsoft.com/download/dotnet-core/3.1.
+* Azure Functions Core Tools - https://www.npmjs.com/package/azure-functions-core-tools
+https://www.npmjs.com/package/azure-functions-core-tools
 
 ## Compile and Deploy Function App
 1. Clone this repo to your local machine using VSCode
+
+   ![Clone Repo](images/CloneRepo.png)
+
 2. Compile and Execute on Local .NET Function Instance (for local testing)
+ 
+   ![Clone Repo](images/CompileAndRunLocally.png)
+   ![Clone Repo](images/LocalExecution.png)
+
 3. Deploy to Azure Function App using VSCode
+ 
+   ![Clone Repo](images/deployToAzureFunction.png)
+
 4. Deploy Logic App ARM Template
+   
+   ![Clone Repo]()
 
 # Graph API Sample Calls and References
 * Exchange > Email Activity 
