@@ -11,9 +11,7 @@
 		"graphAPICall": {
 			"type": "string",
 			"defaultValue": "",
-            "allowedValues": [
-                "https://graph.microsoft.com/v1.0/auditLogs/directoryAudits",
-                "https://graph.microsoft.com/v1.0/auditLogs/signIns",
+            "allowedValues": [                
                 "https://graph.microsoft.com/v1.0/reports/getEmailActivityCounts(period='D7')",
                 "https://graph.microsoft.com/v1.0/reports/getEmailActivityUserCounts(period='D7')",
                 "https://graph.microsoft.com/v1.0/reports/getOffice365ActiveUserCounts(period='D7')",
@@ -28,7 +26,9 @@
                 "https://graph.microsoft.com/v1.0/reports/getSharePointActivityUserDetail(period='D7')",
                 "https://graph.microsoft.com/v1.0/reports/getTeamsUserActivityCounts(period='D7')",
                 "https://graph.microsoft.com/v1.0/reports/getTeamsUserActivityUserCounts(period='D7')",
-                "https://graph.microsoft.com/v1.0/reports/getTeamsUserActivityUserDetail(period='D7')"
+                "https://graph.microsoft.com/v1.0/reports/getTeamsUserActivityUserDetail(period='D7')",
+                "https://graph.microsoft.com/v1.0/auditLogs/directoryAudits",
+                "https://graph.microsoft.com/v1.0/auditLogs/signIns"
             ],
 			"metadata": {
 				"description": "Graph API Call"
@@ -43,28 +43,28 @@
 		},
         "subscriptionId": {
 			"type": "string",
-			"defaultValue": "828ccdf7-38da-4aa4-b635-47ef8aec278e",
+			"defaultValue": "",
 			"metadata": {
 				"description": "Subscription ID"
 			}
 		},
         "FunctionAppResourceGroup": {
 			"type": "string",
-			"defaultValue": "iadbcsvtojson",
+			"defaultValue": "",
 			"metadata": {
 				"description": "Subscription ID"
 			}
 		},
         "FunctionAppName": {
 			"type": "string",
-			"defaultValue": "iadbcsvtojson",
+			"defaultValue": "",
 			"metadata": {
 				"description": "Function App Name"
 			}
 		},
         "FunctionName": {
 			"type": "string",
-			"defaultValue": "CSVToJSON",
+			"defaultValue": "",
 			"metadata": {
 				"description": "Function Name"
 			}
@@ -85,23 +85,23 @@
         },
         "clientId": {
 			"type": "string",
-			"defaultValue": "6fa120ce-a0a4-482f-8145-3b62d50f31e1",
+			"defaultValue": "",
 			"metadata": {
-				"description": "Function Name"
+				"description": "App Registration/Client ID"
             }            
         },
         "secret": {
 			"type": "securestring",
-			"defaultValue": "F..wg5BrNHEPUQ-~q47ejk1T4.d.-h6PJ0",
+			"defaultValue": "",
 			"metadata": {
-				"description": "Function Name"
+				"description": "App Registration Secret"
             }
         },
         "tenant": {
 			"type": "string",
-			"defaultValue": "5853652e-b1c3-4938-9659-738d1fb447c4",
+			"defaultValue": "",
 			"metadata": {
-				"description": "Function Name"
+				"description": "Azure AD Tenant ID"
             }
         },
         "LAWConnectorName": {
@@ -113,14 +113,14 @@
 		},
         "LAWWorkspaceId": {
 			"type": "string",
-			"defaultValue": "10e9eb79-a0af-4487-9e91-074ef479fed2",
+			"defaultValue": "",
 			"metadata": {
 				"description": "Log Analytics Workspace ID."
 			}
 		},
         "LAWWorkspaceKey": {
 			"type": "securestring",
-			"defaultValue": "YmrSqX8W0PJCwXf7ISbLG5bGd0jTOmXEB2cSGekIPtqsSAADYdk7VaUkoWKOZeVcqkeTv4ofP8kCeQd2q9M0Tg==",
+			"defaultValue": "",
 			"metadata": {
 				"description": "Log Analytics Workspace Key."
 			}
