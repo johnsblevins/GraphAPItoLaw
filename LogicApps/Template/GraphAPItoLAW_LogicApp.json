@@ -91,7 +91,7 @@
             }            
         },
         "secret": {
-			"type": "string",
+			"type": "securestring",
 			"defaultValue": "F..wg5BrNHEPUQ-~q47ejk1T4.d.-h6PJ0",
 			"metadata": {
 				"description": "Function Name"
@@ -106,7 +106,7 @@
         },
         "LAWConnectorName": {
 			"type": "string",
-			"defaultValue": "myLawConnector",
+			"defaultValue": "azureloganalyticsdatacollector",
 			"metadata": {
 				"description": "Log Analytics Workspace ID."
 			}
@@ -119,7 +119,7 @@
 			}
 		},
         "LAWWorkspaceKey": {
-			"type": "string",
+			"type": "securestring",
 			"defaultValue": "YmrSqX8W0PJCwXf7ISbLG5bGd0jTOmXEB2cSGekIPtqsSAADYdk7VaUkoWKOZeVcqkeTv4ofP8kCeQd2q9M0Tg==",
 			"metadata": {
 				"description": "Log Analytics Workspace Key."
@@ -184,7 +184,7 @@
                         "inputs": {
                             "body": "@{body('Parse_JSON')?['rows']}",
                             "headers": {
-                                "Log-Type": "TeamsUserActivityUserCounts"
+                                "Log-Type": "[split(split(parameters('graphAPICall'),'/')[5],'(')[0]]"
                             },
                             "host": {
                                 "connection": {
@@ -236,9 +236,9 @@
                 "$connections": {
                     "value": {
                         "azureloganalyticsdatacollector": {
-                            "connectionId": "/subscriptions/828ccdf7-38da-4aa4-b635-47ef8aec278e/resourceGroups/joblevin-graph2law/providers/Microsoft.Web/connections/azureloganalyticsdatacollector",
-                            "connectionName": "azureloganalyticsdatacollector",
-                            "id": "/subscriptions/828ccdf7-38da-4aa4-b635-47ef8aec278e/providers/Microsoft.Web/locations/usgovvirginia/managedApis/azureloganalyticsdatacollector"
+                            "connectionId": "[concat('/subscriptions/',parameters('subscriptionId'),'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Web/connections/',parameters('LAWConnectorname'))]",
+                            "connectionName": "[parameters('LAWConnectorname')]",
+                            "id": "[concat('/subscriptions/',parameters('subscriptionId'),'/providers/Microsoft.Web/locations/usgovvirginia/managedApis/azureloganalyticsdatacollector')]"                        
                         }
                     }
                 }
