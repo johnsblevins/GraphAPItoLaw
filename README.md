@@ -30,7 +30,10 @@ https://www.npmjs.com/package/azure-functions-core-tools
 
 4. Deploy Logic App ARM Template
    
-   ![Clone Repo]()
+   [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fjohnsblevins%2FGraphAPItoLaw%2Fmaster%2FLogicApps%2FTemplate%2FGraphAPItoLAW_LogicApp.json)
+  
+     [![Deploy to Azure](https://aka.ms/deploytoazuregovbutton)](https://portal.azure.us/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fjohnsblevins%2FGraphAPItoLaw%2Fmaster%2FLogicApps%2FTemplate%2FGraphAPItoLAW_LogicApp.json)
+   
 
 # Graph API Sample Calls and References
 * Exchange > Email Activity 
