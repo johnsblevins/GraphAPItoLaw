@@ -238,7 +238,7 @@
                         "azureloganalyticsdatacollector": {
                             "connectionId": "[concat('/subscriptions/',parameters('subscriptionId'),'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Web/connections/',parameters('LAWConnectorname'))]",
                             "connectionName": "[parameters('LAWConnectorname')]",
-                            "id": "[concat('/subscriptions/',parameters('subscriptionId'),'/providers/Microsoft.Web/locations/usgovvirginia/managedApis/azureloganalyticsdatacollector')]"                        
+                            "id": "[concat('/subscriptions/',parameters('subscriptionId'),'/providers/Microsoft.Web/locations/',parameters('location'),'/managedApis/azureloganalyticsdatacollector')]"                        
                         }
                     }
                 }
@@ -255,7 +255,7 @@
                 "displayName": "[parameters('LAWConnectorname')]",
                 "customParameterValues": {},
                 "api": {
-                    "id": "[concat('/subscriptions/',parameters('subscriptionId'),'/providers/Microsoft.Web/locations/usgovvirginia/managedApis/azureloganalyticsdatacollector')]"
+                    "id": "[concat('/subscriptions/',parameters('subscriptionId'),'/providers/Microsoft.Web/locations/',parameters('location'),'/managedApis/azureloganalyticsdatacollector')]"
                 },
                 "parameterValues": {
                     "username": "[parameters('LAWWorkspaceId')]",
