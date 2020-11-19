@@ -1,0 +1,406 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"graphAPICall": {
+			"type": "string",
+            "defaultValue": "https://graph.microsoft.com/v1.0/reports/getTeamsUserActivityCounts(period='D7')",
+            "allowedValues": [                
+                "https://graph.microsoft.com/v1.0/reports/getEmailActivityCounts(period='D7')",
+                "https://graph.microsoft.com/v1.0/reports/getEmailActivityUserCounts(period='D7')",
+                "https://graph.microsoft.com/v1.0/reports/getOffice365ActiveUserCounts(period='D7')",
+                "https://graph.microsoft.com/v1.0/reports/getOffice365ActiveUserDetail(period='D7')",
+                "https://graph.microsoft.com/v1.0/reports/getOffice365ServicesUserCounts(period='D7')",
+                "https://graph.microsoft.com/v1.0/reports/getOneDriveActivityFileCounts(period='D7')",
+                "https://graph.microsoft.com/v1.0/reports/getOneDriveActivityUserCounts(period='D7')",
+                "https://graph.microsoft.com/v1.0/reports/getOneDriveActivityUserDetail(period='D7')",
+                "https://graph.microsoft.com/v1.0/reports/getSharePointActivityFileCounts(period='D7')",
+                "https://graph.microsoft.com/v1.0/reports/getSharePointActivityPages(period='D7')",
+                "https://graph.microsoft.com/v1.0/reports/getSharePointActivityUserCounts(period='D7')",
+                "https://graph.microsoft.com/v1.0/reports/getSharePointActivityUserDetail(period='D7')",
+                "https://graph.microsoft.com/v1.0/reports/getTeamsUserActivityCounts(period='D7')",
+                "https://graph.microsoft.com/v1.0/reports/getTeamsUserActivityUserCounts(period='D7')",
+                "https://graph.microsoft.com/v1.0/reports/getTeamsUserActivityUserDetail(period='D7')"
+            ],
+			"metadata": {
+				"description": "Graph API Call"
+			}
+		},
+        "FunctionRG": {
+			"type": "string",
+			"defaultValue": "",
+			"metadata": {
+				"description": "Function Resource Group"
+			}
+		},
+        "FunctionApp": {
+			"type": "string",
+			"defaultValue": "",
+			"metadata": {
+				"description": "Function App Name"
+			}
+		},
+        "Function": {
+			"type": "string",
+			"defaultValue": "",
+			"metadata": {
+				"description": "Function Name"
+			}
+		},
+        "clientId": {
+			"type": "string",
+			"defaultValue": "",
+			"metadata": {
+				"description": "App Registration/Client ID"
+            }            
+        },
+        "tenant": {
+			"type": "string",
+			"defaultValue": "",
+			"metadata": {
+				"description": "Azure AD Tenant ID"
+            }
+        },
+        "LogAnalyticsConnectorName": {
+			"type": "string",
+			"defaultValue": "",
+			"metadata": {
+				"description": "Log Analytics Workspace ID."
+			}
+		},
+        "LogAnalyticsWorkspaceId": {
+			"type": "string",
+			"defaultValue": "",
+			"metadata": {
+				"description": "Log Analytics Workspace ID."
+			}
+		},
+        "LogAnalyticsWorkspaceKey": {
+			"type": "securestring",
+			"defaultValue": "",
+			"metadata": {
+				"description": "Log Analytics Workspace Key."
+			}
+		},
+        "KeyVaultName": {
+			"type": "string",
+			"defaultValue": "",
+			"metadata": {
+				"description": "KeyVault Name."
+			}
+		}
+	},
+	"variables": {
+        "FunctionId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',parameters('FunctionRG'),'/providers/Microsoft.Web/sites/',parameters('FunctionApp'),'/functions/',parameters('Function'))]",
+        "logicAppName": "[split(split(parameters('graphAPICall'),'/')[5],'(')[0]]"
+    },
+	"resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2019-05-01",
+            "name": "[variables('logicAppName')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": ["[parameters('LogAnalyticsConnectorname')]"],
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "actions": {
+                        "Call_Graph_API_to_Get_Report": {
+                            "inputs": {
+                                "authentication": {
+                                    "audience": "https://graph.microsoft.com",
+                                    "authority": "https://login.windows.net",
+                                    "clientId": "[parameters('clientId')]",
+                                    "secret": "@body('Get_Graph_API_Client_Secret_from_KeyVault')?['value']",
+                                    "tenant": "[parameters('tenant')]",
+                                    "type": "ActiveDirectoryOAuth"
+                                },
+                                "method": "GET",
+                                "uri": "[parameters('graphAPICall')]"
+                            },
+                            "runAfter": {
+                                "Get_Graph_API_Client_Secret_from_KeyVault": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Http"
+                        },
+                        "Get_Graph_API_Client_Secret_from_KeyVault": {
+                            "inputs": {
+                                "authentication": {
+                                    "audience": "https://vault.azure.net",
+                                    "type": "ManagedServiceIdentity"
+                                },
+                                "method": "GET",
+                                "queries": {
+                                    "api-version": "2016-10-01"
+                                },
+                                "uri": "[concat('https://',parameters('KeyVaultName'),'.vault.azure.net/secrets/O365ClientSecret')]"
+                            },
+                            "runAfter": {},
+                            "runtimeConfiguration": {
+                                "secureData": {
+                                    "properties": [
+                                        "outputs"
+                                    ]
+                                }
+                            },
+                            "type": "Http"
+                        },
+                        "Handle_Graph_API_Redirect_to_Download_URL": {
+                            "cases": {
+                                "Redirect_302_Response_Code": {
+                                    "actions": {
+                                        "Convert_CSV_file_to_JSON": {
+                                            "inputs": {
+                                                "body": {
+                                                    "csv": "@{body('Download_Report_CSV_File')}",
+                                                    "fileName": "",
+                                                    "rowsToSkip": 1
+                                                },
+                                                "function": {
+                                                    "id": "[variables('FunctionId')]"
+                                                }
+                                            },
+                                            "runAfter": {
+                                                "Download_Report_CSV_File": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "Function"
+                                        },
+                                        "Download_Report_CSV_File": {
+                                            "inputs": {
+                                                "method": "GET",
+                                                "uri": "@body('Parse_Graph_API_Response_Header_JSON_for_Report_Download_URL')?['Location']"
+                                            },
+                                            "runAfter": {
+                                                "Parse_Graph_API_Response_Header_JSON_for_Report_Download_URL": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "Http"
+                                        },
+                                        "Parse_Graph_API_Response_Header_JSON_for_Report_Download_URL": {
+                                            "inputs": {
+                                                "content": "@outputs('Call_Graph_API_to_Get_Report')['headers']",
+                                                "schema": {
+                                                    "properties": {
+                                                        "Cache-Control": {
+                                                            "type": "string"
+                                                        },
+                                                        "Content-Length": {
+                                                            "type": "string"
+                                                        },
+                                                        "Content-Type": {
+                                                            "type": "string"
+                                                        },
+                                                        "Date": {
+                                                            "type": "string"
+                                                        },
+                                                        "Location": {
+                                                            "type": "string"
+                                                        },
+                                                        "Strict-Transport-Security": {
+                                                            "type": "string"
+                                                        },
+                                                        "client-request-id": {
+                                                            "type": "string"
+                                                        },
+                                                        "request-id": {
+                                                            "type": "string"
+                                                        },
+                                                        "x-ms-ags-diagnostic": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "runAfter": {},
+                                            "type": "ParseJson"
+                                        },
+                                        "Parse_Report_Data_from_JSON": {
+                                            "inputs": {
+                                                "content": "@body('Convert_CSV_file_to_JSON')",
+                                                "schema": {
+                                                    "properties": {
+                                                        "fileName": {
+                                                            "type": "string"
+                                                        },
+                                                        "rows": {
+                                                            "items": {
+                                                                "properties": {
+                                                                    "Calls": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "Meetings": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "Private Chat Messages": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "Report Date": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "Report Period": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "Team Chat Messages": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "﻿Report Refresh Date": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "﻿Report Refresh Date",
+                                                                    "Report Date",
+                                                                    "Team Chat Messages",
+                                                                    "Private Chat Messages",
+                                                                    "Calls",
+                                                                    "Meetings",
+                                                                    "Report Period"
+                                                                ],
+                                                                "type": "object"
+                                                            },
+                                                            "type": "array"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "runAfter": {
+                                                "Convert_CSV_file_to_JSON": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "ParseJson"
+                                        },
+                                        "Send_Data_from_Past_Day_to_Log_Analytics": {
+                                            "inputs": {
+                                                "body": "@{body('Parse_Report_Data_from_JSON')?['rows']?[0]}",
+                                                "headers": {
+                                                    "Log-Type": "[split(split(parameters('graphAPICall'),'/')[5],'(')[0]]"
+                                                },
+                                                "host": {
+                                                    "connection": {
+                                                        "name": "@parameters('$connections')['Log Analytics Connector']['connectionId']"
+                                                    }
+                                                },
+                                                "method": "post",
+                                                "path": "/api/logs"
+                                            },
+                                            "runAfter": {
+                                                "Parse_Report_Data_from_JSON": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "ApiConnection"
+                                        }
+                                    },
+                                    "case": 302
+                                }
+                            },
+                            "default": {
+                                "actions": {
+                                    "Terminate": {
+                                        "inputs": {
+                                            "runError": {
+                                                "code": "@{outputs('Call_Graph_API_to_Get_Report')['statusCode']}",
+                                                "message": "Request failed with status code @{outputs('Call_Graph_API_to_Get_Report')['statusCode']}."
+                                            },
+                                            "runStatus": "Failed"
+                                        },
+                                        "runAfter": {},
+                                        "type": "Terminate"
+                                    }
+                                }
+                            },
+                            "expression": "@outputs('Call_Graph_API_to_Get_Report')['statusCode']",
+                            "runAfter": {
+                                "Call_Graph_API_to_Get_Report": [
+                                    "Succeeded",
+                                    "Failed"
+                                ]
+                            },
+                            "type": "Switch"
+                        }
+                    },
+                    "contentVersion": "1.0.0.0",
+                    "outputs": {},
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        }
+                    },
+                    "triggers": {
+                        "Run_Daily": {
+                            "recurrence": {
+                                "frequency": "Day",
+                                "interval": 1
+                            },
+                            "type": "Recurrence"
+                        }
+                    }
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {
+                            "Log Analytics Connector": {
+                                "connectionId": "[resourceId('Microsoft.Web/connections',parameters('LogAnalyticsConnectorName'))]",
+                                "connectionName": "[parameters('LogAnalyticsConnectorName')]",
+                                "id": "[reference(concat('Microsoft.Web/connections/',parameters('LogAnalyticsConnectorName')),'2016-06-01').api.id]"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Web/connections",
+            "apiVersion": "2018-07-01-preview",
+            "location": "[resourceGroup().location]",
+            "name": "[parameters('LogAnalyticsConnectorname')]",
+            "dependsOn": [],
+            "properties": {
+                "displayName": "[parameters('LogAnalyticsConnectorname')]",
+                "customParameterValues": {},
+                "api": {
+                    "id": "[concat('/subscriptions/',subscription().subscriptionId,'/providers/Microsoft.Web/locations/',resourceGroup().location,'/managedApis/azureloganalyticsdatacollector')]"
+                },
+                "parameterValues": {
+                    "username": "[parameters('LogAnalyticsWorkspaceId')]",
+                    "password": "[parameters('LogAnalyticsWorkspaceKey')]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.KeyVault/vaults/accessPolicies",
+            "name": "[concat(parameters('KeyVaultName'), '/add')]",
+            "apiVersion": "2019-09-01",
+            "dependson": ["[variables('logicAppName')]"],
+            "properties": {
+                "accessPolicies": [
+                    {
+                        "tenantId": "[parameters('tenant')]",
+                        "objectId": "[reference(resourceId('Microsoft.Logic/workflows', variables('logicAppName')), '2019-05-01', 'full').identity.principalId]",
+                        "permissions": {
+                            "secrets": ["get"]
+                        }
+                    }
+                ]
+            }
+        }    
+    ],
+	"outputs": {
+        "objectId": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.Logic/workflows', variables('logicAppName')), '2019-05-01', 'full').identity.principalId]"
+        }
+    }
+}
